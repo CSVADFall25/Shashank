@@ -1,10 +1,19 @@
-// AnalogousColor
-// Mouse position changes base hue value. Four squares show analogous colors (base, base +30, base +60, base +90).
-// extended from Rune Madsen's Color Scheme Analogous Example :https://printingcode.runemadsen.com/examples/color/scheme_analogous/index.html
+// MiniAssignment2
+// AnalogousColor 
+//Following changes made:
+// 1. controls:  mouseX=hue, mouseY=sat, UP/DOWN=brightness
+// 2. modes: W=warm, C=cool, P=pastel, N=normal
+// 3. grouping: [ / ] to change analogous gap
 
 let outerRadius = 200;
 let innerRadius = 100; // hole size
 let steps = 360/15; // resolution
+
+// added:
+let mode = 'normal';     // normal | warm | cool | pastel
+let sat = 100;           // controlled by mouseY
+let bri = 100;           // arrows adjust
+let gap = 30;            // analogous step (use [ and ] to change)
 
 function setup() {
   createCanvas(800, 800);
@@ -16,52 +25,78 @@ function draw() {
   background(100);
   drawRing();
 
-  // Map mouseX to hue (0–360)
-  let baseHue = map(mouseX, 0, width, 0, 360);
+  // base hue (range depends on mode)
+  let hStart = 0, hEnd = 360;
+  if (mode === 'warm') { hStart = 330; hEnd = 420; }     // wraps through reds/oranges
+  if (mode === 'cool') { hStart = 120; hEnd = 260; }     // greens->blues
+  // map X into that hue band, then wrap
+  let baseHue = map(mouseX, 0, width, hStart, hEnd);
+  baseHue = ((baseHue % 360) + 360) % 360;
+
+  // selection changes: mouseY -> saturation
+  sat = map(mouseY, 0, height, 100, 40); // less sat as you go down
+  sat = constrain(sat, 0, 100);
+
+  // pastel mode nudges sat/bright
+  let localSat = sat;
+  let localBri = bri;
+  if (mode === 'pastel') {
+    localSat = min(localSat, 55);
+    localBri = max(localBri, 85);
+  }
 
   let squareWidth = 200;
 
-  // Square 1: base hue
-  fill((baseHue + 0) % 360, 100, 100);
+  // group changed: gap is adjustable (default 30)
+  // Square 1
+  fill((baseHue + 0*gap) % 360, localSat, localBri);
   rect(0, 0, squareWidth, height/4);
-  drawColorPosition(baseHue);
+  drawColorPosition(baseHue + 0*gap);
 
-  // Square 2: base + 30
-  fill((baseHue + 30) % 360, 100, 100);
+  // Square 2
+  fill((baseHue + 1*gap) % 360, localSat, localBri);
   rect(squareWidth, 0, squareWidth, height/4);
-  drawColorPosition(baseHue + 30);
+  drawColorPosition(baseHue + 1*gap);
 
-
-  // Square 3: base + 60
-  fill((baseHue + 60) % 360, 100, 100);
+  // Square 3
+  fill((baseHue + 2*gap) % 360, localSat, localBri);
   rect(squareWidth * 2, 0, squareWidth, height/4);
-  drawColorPosition(baseHue + 60);
+  drawColorPosition(baseHue + 2*gap);
 
-  // Square 4: base + 90
-  fill((baseHue + 90) % 360, 100, 100);
-  rect(squareWidth * 3, 0, squareWidth, height /4);
-  drawColorPosition(baseHue + 90);
+  // Square 4
+  fill((baseHue + 3*gap) % 360, localSat, localBri);
+  rect(squareWidth * 3, 0, squareWidth, height/4);
+  drawColorPosition(baseHue + 3*gap);
 
-  
+  // tiny hint
+  fill(0, 0, 100);
+  text('W/C/P/N modes • [ / ] gap=' + gap + '° • mouseY=sat • ↑/↓ brightness=' + nf(localBri,1,0), 12, height-12);
 }
 
+function keyPressed(){
+  if (key==='W'||key==='w') mode='warm';
+  if (key==='C'||key==='c') mode='cool';
+  if (key==='P'||key==='p') mode='pastel';
+  if (key==='N'||key==='n') mode='normal';
+  if (key==='[') gap = max(10, gap-5);
+  if (key===']') gap = min(90, gap+5);
+  if (keyCode === UP_ARROW)   bri = constrain(bri+5, 0, 100);
+  if (keyCode === DOWN_ARROW) bri = constrain(bri-5, 0, 100);
+}
 
 function drawColorPosition(hue){
   push();
   translate(width / 2, height / 2); 
   let x1 = cos(radians(hue)) * (innerRadius+(outerRadius-innerRadius)/2);
   let y1 = sin(radians(hue)) * (innerRadius+(outerRadius-innerRadius)/2);
-  fill(0);
+  fill(0, 0, 100);
   ellipse(x1, y1, 20,20);
   pop();
 }
 
 function drawRing(){
   push();
-  translate(width / 2, height / 2); // center of canvas
-
-  
-
+  translate(width / 2, height / 2);
   for (let angle = 0; angle < 360; angle+=steps) {
     let nextAngle = angle + steps;
 
@@ -79,8 +114,6 @@ function drawRing(){
 
     fill(angle, 100, 100);
     quad(x1, y1, x2, y2, x3, y3, x4, y4);
-   
   }
   pop();
-
 }
