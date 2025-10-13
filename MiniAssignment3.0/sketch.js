@@ -1,6 +1,5 @@
-// Mirrored Cube — Brightness Forming + Duotone Filter (with master Filter Mix)
-// + Stylized Multi-Layer Contours via Marching Squares
-// Works with the index.html you already have (p5 1.9.4 + p5.dom)
+// Mirrored Cube — Brightness Forming + Duotone Filter 
+// Make the real frame feeding into the camera through varied brightness
 
 let video;
 const W = 480, H = 480;
