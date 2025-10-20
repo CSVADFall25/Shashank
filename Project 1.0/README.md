@@ -1,5 +1,7 @@
 Drawing - Dance
 
+*You need a controller to use this tool
+
 Philosophy behind the design: 
 
 Why only dance should be the response to music. What if we approach the way we vibe through drawing or sketches. 
