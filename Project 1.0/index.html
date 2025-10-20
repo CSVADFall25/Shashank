@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Drawing Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎵 Music Drawing Tool</h1>
+            <p>Upload music, draw with mouse/controller, and let the rhythm guide your art!</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <div class="sidebar left-sidebar">
+                <!-- Audio Upload -->
+                <div class="control-group">
+                    <h3>🎵 Audio</h3>
+                    <button id="startBtn" class="btn primary">Start Audio Context</button>
+                    <input type="file" id="fileInput" accept="audio/*" class="file-input">
+                    <div class="audio-controls">
+                        <button id="playBtn" class="btn" disabled>▶️ Play</button>
+                        <button id="pauseBtn" class="btn" disabled>⏸️ Pause</button>
+                    </div>
+                </div>
+
+                <!-- Drawing Controls -->
+                <div class="control-group">
+                    <h3>🎨 Drawing</h3>
+                    <div class="setting-row">
+                        <label>Pattern:</label>
+                        <select id="pattern" class="control-input">
+                            <option value="circles">Circles</option>
+                            <option value="stars">Stars</option>
+                            <option value="waves">Waves</option>
+                            <option value="grid">Grid</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label>Trail Effect:</label>
+                        <input type="checkbox" id="trailEffect" class="control-input" checked>
+                    </div>
+                </div>
+
+                <!-- Beat Controls (will be added dynamically by JS) -->
+                
+                <!-- Instructions -->
+                <div class="control-group">
+                    <h3>📋 Controls</h3>
+                    <div class="instructions">
+                        <h4>Mouse:</h4>
+                        <ul>
+                            <li>Click & drag to draw</li>
+                        </ul>
+                        
+                        <h4>Keyboard:</h4>
+                        <ul>
+                            <li><kbd>Y</kbd> - Toggle color picker</li>
+                            <li><kbd>A</kbd> - Cycle patterns</li>
+                            <li><kbd>B</kbd> - Clear canvas</li>
+                            <li><kbd>X</kbd> - Toggle trail</li>
+                            <li><kbd>S</kbd> - Save image</li>
+                            <li><kbd>←→</kbd> - Adjust hue (in color picker)</li>
+                            <li><kbd>↑↓</kbd> - Adjust saturation (in color picker)</li>
+                        </ul>
+                        
+                        <h4>Controller:</h4>
+                        <ul>
+                            <li><strong>Left Stick</strong> - Move cursor</li>
+                            <li><strong>RT</strong> - Draw pressure</li>
+                            <li><strong>A</strong> - Cycle patterns</li>
+                            <li><strong>B</strong> - Clear canvas</li>
+                            <li><strong>X</strong> - Toggle trail</li>
+                            <li><strong>Y</strong> - Color picker mode</li>
+                            <li><strong>D-Pad</strong> - Adjust color (when Y pressed)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-container">
+                <div id="sketch-holder"></div>
+                <div class="canvas-overlay">
+                    <div class="beat-indicator" id="beatIndicator"></div>
+                    <div class="color-preview" id="colorPreview"></div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="sidebar right-sidebar">
+                <!-- Music Analysis Display -->
+                <div class="control-group">
+                    <h3>🎵 Music Analysis</h3>
+                    <div class="spectrum-display" id="spectrumDisplay">
+                        <div class="freq-bar">
+                            <label>Bass</label>
+                            <div class="bar-container">
+                                <div class="bar" id="bassBar"></div>
+                            </div>
+                        </div>
+                        <div class="freq-bar">
+                            <label>Mid</label>
+                            <div class="bar-container">
+                                <div class="bar" id="midBar"></div>
+                            </div>
+                        </div>
+                        <div class="freq-bar">
+                            <label>High</label>
+                            <div class="bar-container">
+                                <div class="bar" id="highBar"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Display -->
+                <div class="control-group">
+                    <h3>📊 Status</h3>
+                    <div class="status-display" id="statusDisplay">
+                        <div class="status-item">
+                            <span class="status-label">Beat Locked:</span>
+                            <span class="status-value" id="beatLockedStatus">ON</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Beat Count:</span>
+                            <span class="status-value" id="beatCountStatus">0</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Pattern:</span>
+                            <span class="status-value" id="patternStatus">circles</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Controller:</span>
+                            <span class="status-value" id="controllerStatus">Not Connected</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Color Picker:</span>
+                            <span class="status-value" id="colorPickerStatus">OFF</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Sparkles:</span>
+                            <span class="status-value" id="sparklesStatus">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="control-group">
+                    <h3>⚡ Quick Actions</h3>
+                    <div class="action-buttons">
+                        <button class="btn action" onclick="clearCanvas()">🗑️ Clear Canvas</button>
+                        <button class="btn action" onclick="saveArt()">💾 Save Art</button>
+                        <button class="btn action" onclick="toggleColorPicker()">🎨 Color Picker</button>
+                        <button class="btn action" onclick="toggleTrail()">✨ Toggle Trail</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>🎵 Music Drawing Tool - Let the rhythm guide your creativity! 🎨</p>
+        </footer>
+    </div>
+
+    <!-- Load the main sketch -->
+    <script src="sketch_minimal.js"></script>
+    
+    <!-- Additional UI interactions -->
+    <script>
+        // Quick action functions that interface with the p5.js sketch
+        function clearCanvas() {
+            if (typeof pg !== 'undefined') {
+                pg.background(0);
+                console.log('Canvas cleared via UI');
+            }
+        }
+        
+        function saveArt() {
+            if (typeof cnv !== 'undefined') {
+                saveCanvas(cnv, 'music-drawing', 'png');
+                console.log('Canvas saved via UI');
+            }
+        }
+        
+        function toggleColorPicker() {
+            if (typeof isColorPickerMode !== 'undefined') {
+                isColorPickerMode = !isColorPickerMode;
+                showColorPicker = isColorPickerMode;
+                console.log('Color picker toggled via UI:', isColorPickerMode);
+            }
+        }
+        
+        function toggleTrail() {
+            if (typeof trailEffect !== 'undefined') {
+                trailEffect = !trailEffect;
+                console.log('Trail effect toggled via UI:', trailEffect);
+            }
+        }
+        
+        // Update status display periodically
+        function updateStatusDisplay() {
+            if (typeof STATE !== 'undefined') {
+                const beatLockedEl = document.getElementById('beatLockedStatus');
+                const beatCountEl = document.getElementById('beatCountStatus');
+                const patternEl = document.getElementById('patternStatus');
+                const controllerEl = document.getElementById('controllerStatus');
+                const colorPickerEl = document.getElementById('colorPickerStatus');
+                const sparklesEl = document.getElementById('sparklesStatus');
+                
+                if (beatLockedEl) beatLockedEl.textContent = STATE.beatLocked ? 'ON' : 'OFF';
+                if (beatCountEl) beatCountEl.textContent = STATE.beatCount || 0;
+                if (patternEl) patternEl.textContent = currentPattern || 'circles';
+                if (controllerEl) controllerEl.textContent = gamepadConnected ? 'Connected' : 'Not Connected';
+                if (colorPickerEl) colorPickerEl.textContent = showColorPicker ? 'ON' : 'OFF';
+                if (sparklesEl) sparklesEl.textContent = sparkles ? sparkles.length : 0;
+                
+                // Update music analysis bars
+                if (typeof fft !== 'undefined' && sound && sound.isPlaying()) {
+                    const spectrum = fft.analyze();
+                    const bassRange = Math.floor(spectrum.length * 0.1);
+                    const midRange = Math.floor(spectrum.length * 0.5);
+                    
+                    let bass = 0, mid = 0, high = 0;
+                    for (let i = 0; i < bassRange; i++) bass += spectrum[i];
+                    for (let i = bassRange; i < midRange; i++) mid += spectrum[i];
+                    for (let i = midRange; i < spectrum.length; i++) high += spectrum[i];
+                    
+                    bass = (bass / bassRange) / 255 * 100;
+                    mid = (mid / (midRange - bassRange)) / 255 * 100;
+                    high = (high / (spectrum.length - midRange)) / 255 * 100;
+                    
+                    const bassBar = document.getElementById('bassBar');
+                    const midBar = document.getElementById('midBar');
+                    const highBar = document.getElementById('highBar');
+                    
+                    if (bassBar) bassBar.style.width = bass + '%';
+                    if (midBar) midBar.style.width = mid + '%';
+                    if (highBar) highBar.style.width = high + '%';
+                }
+                
+                // Update color preview
+                if (typeof hue !== 'undefined' && typeof sat !== 'undefined' && typeof bri !== 'undefined') {
+                    const colorPreview = document.getElementById('colorPreview');
+                    if (colorPreview) {
+                        colorPreview.style.background = `hsl(${hue}, ${sat}%, ${bri}%)`;
+                    }
+                }
+                
+                // Update beat indicator
+                if (typeof STATE !== 'undefined' && STATE.risingEdge) {
+                    const beatIndicator = document.getElementById('beatIndicator');
+                    if (beatIndicator) {
+                        beatIndicator.classList.add('pulse');
+                        setTimeout(() => {
+                            beatIndicator.classList.remove('pulse');
+                        }, 200);
+                    }
+                }
+            }
+        }
+        
+        // Update status every 100ms
+        setInterval(updateStatusDisplay, 100);
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            console.log('Music Drawing Tool UI loaded');
+        });
+    </script>
+</body>
+</html>
