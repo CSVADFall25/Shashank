@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Drawing Tool</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="libraries/p5.min.js"></script>
+    <script src="libraries/p5.sound.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎵 Music Drawing Tool</h1>
+            <p>Upload music, draw with mouse/controller, and let the rhythm guide your art!</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Sidebar -->
+            <div class="sidebar left-sidebar">
+                <!-- Audio Upload -->
+                <div class="control-group">
+                    <h3>🎵 Audio</h3>
+                    <button id="startBtn">Start Audio Context</button>
+                    <input type="file" id="fileInput" accept="audio/*">
+                    <div class="audio-controls">
+                        <button id="playBtn" disabled>▶️ Play</button>
+                        <button id="pauseBtn" disabled>⏸️ Pause</button>
+                    </div>
+                </div>
+
+                <!-- Drawing Controls -->
+                <div class="control-group">
+                    <h3>🎨 Drawing</h3>
+                    <div class="setting-row">
+                        <label>Canvas Mode:</label>
+                        <select id="canvasMode">
+                            <option value="2D">2D</option>
+                            <option value="3D">3D</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label>Pattern:</label>
+                        <select id="pattern">
+                            <option value="circles">Circles</option>
+                            <option value="stars">Stars</option>
+                            <option value="waves">Waves</option>
+                            <option value="grid">Grid</option>
+                            <option value="particles">Particles</option>
+                            <option value="ribbons">Ribbons</option>
+                        </select>
+                    </div>
+                    <div class="setting-row">
+                        <label>Brush Size:</label>
+                        <input type="range" id="brush" min="10" max="200" value="50">
+                        <span id="brushValue">50</span>
+                    </div>
+                    <div class="setting-row">
+                        <label>Texture:</label>
+                        <select id="textureMode">
+                            <option value="smooth">Smooth</option>
+                            <option value="rough">Rough</option>
+                            <option value="paper">Paper</option>
+                            <option value="canvas">Canvas</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Color Controls -->
+                <div class="control-group">
+                    <h3>🌈 Colors</h3>
+                    <div class="setting-row">
+                        <label>Color Mode:</label>
+                        <select id="colorMode">
+                            <option value="spectrum">Spectrum</option>
+                            <option value="warm">Warm</option>
+                            <option value="cool">Cool</option>
+                            <option value="monochrome">Monochrome</option>
+                            <option value="custom">Custom</option>
+                            <option value="picker">Color Picker</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Manual Color Picker -->
+                    <div id="manual-color-picker" class="manual-color-picker">
+                        <label>Manual Color Picker:</label>
+                        <div class="color-picker-container">
+                            <canvas id="colorWheel" width="150" height="150"></canvas>
+                            <div class="color-picker-controls">
+                                <div class="color-preview" id="colorPreview"></div>
+                                <div class="picker-info">
+                                    <span>Hue: <span id="hueValue">0</span>°</span><br>
+                                    <span>Sat: <span id="satValue">100</span>%</span><br>
+                                    <span>Bright: <span id="brightValue">100</span>%</span>
+                                </div>
+                                <button id="usePickedColor" class="use-color-btn">Use This Color</button>
+                            </div>
+                        </div>
+                        <div class="picker-instructions">
+                            <p><strong>Mouse:</strong> Click on color wheel</p>
+                            <p><strong>Controller:</strong> Use D-Pad arrows</p>
+                        </div>
+                    </div>
+                    
+                    <div id="custom-color-section" class="custom-color-controls">
+                        <div class="setting-row">
+                            <label>Custom Color:</label>
+                            <input type="color" id="customColor" value="#ff6b6b">
+                        </div>
+                        <div class="setting-row">
+                            <label>Brightness:</label>
+                            <input type="range" id="colorBrightness" min="20" max="100" value="80">
+                            <span id="brightnessValue">80</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auto Movement -->
+                <div class="control-group">
+                    <h3>🤖 Auto Movement</h3>
+                    <div class="setting-row">
+                        <label>
+                            <input type="checkbox" id="autoMovement"> Enable Auto Movement
+                        </label>
+                    </div>
+                    <div id="auto-movement-controls" class="auto-movement-controls">
+                        <div class="setting-row">
+                            <label>Movement Factor:</label>
+                            <select id="movementFactor">
+                                <option value="bass">Bass</option>
+                                <option value="mid">Mid Frequencies</option>
+                                <option value="treble">Treble</option>
+                                <option value="mixed">Mixed</option>
+                                <option value="beat">Beat Detection</option>
+                            </select>
+                        </div>
+                        <div class="setting-row">
+                            <label>Movement Speed:</label>
+                            <input type="range" id="movementSpeed" min="0" max="100" value="50">
+                            <span id="movementSpeedValue">50</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Canvas Area -->
+            <div class="canvas-container">
+                <div id="sketch-holder"></div>
+                
+                <!-- Timeline Controls -->
+                <div class="timeline-controls">
+                    <div class="timeline-row">
+                        <span class="time-display" id="currentTime">0:00</span>
+                        <input type="range" id="timelineSeeker" min="0" max="100" value="0" class="timeline-slider">
+                        <span class="time-display" id="totalTime">0:00</span>
+                    </div>
+                    <div class="timeline-buttons">
+                        <button id="timelineCaptureBtn">Enable Timeline Capture</button>
+                        <button id="addMarkerBtn" disabled>📍 Add Marker</button>
+                        <button id="createCompositeBtn" disabled>🖼️ Create Composite</button>
+                    </div>
+                    <div id="timeMarkers" class="time-markers"></div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div class="sidebar right-sidebar">
+                <!-- Music Mapping -->
+                <div class="control-group">
+                    <h3>🎼 Music Mapping</h3>
+                    <div class="setting-row">
+                        <label>Beat Sensitivity:</label>
+                        <input type="range" id="beat" min="0" max="100" value="70">
+                        <span id="beatValue">70</span>
+                    </div>
+                    <div class="setting-row">
+                        <label>
+                            <input type="checkbox" id="audioReactive" checked> Audio Reactive
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <label>
+                            <input type="checkbox" id="rhythmTexture" checked> Rhythm Texture
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Performance Effects -->
+                <div class="control-group">
+                    <h3>✨ Effects</h3>
+                    <div class="setting-row">
+                        <label>
+                            <input type="checkbox" id="trailEffect" checked> Trail Effect
+                        </label>
+                    </div>
+                    <div class="setting-row">
+                        <label>
+                            <input type="checkbox" id="beatFlash" checked> Beat Flash
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Export & Timeline -->
+                <div class="control-group">
+                    <h3>💾 Save & Export</h3>
+                    <button id="saveBtn" class="save-btn">💾 Save Current View</button>
+                    <button id="clearBtn" class="clear-btn">🗑️ Clear Canvas</button>
+                    <button id="recordBtn">🔴 Record Performance</button>
+                </div>
+
+                <!-- Controller Instructions -->
+                <div class="control-group controller-info">
+                    <h3>🎮 Controller Support</h3>
+                    <div class="controller-instructions">
+                        <p><strong>Left Stick:</strong> Move drawing position</p>
+                        <p><strong>Right Trigger:</strong> Draw pressure</p>
+                        <p><strong>A Button:</strong> Cycle patterns</p>
+                        <p><strong>B Button:</strong> Clear canvas</p>
+                        <p><strong>X Button:</strong> Toggle trail effect</p>
+                        <p><strong>Y Button:</strong> Save canvas</p>
+                        <p><strong>D-Pad ←→:</strong> Change hue in color picker</p>
+                        <p><strong>D-Pad ↑↓:</strong> Change saturation in color picker</p>
+                    </div>
+                    <div id="gamepad-status" class="controller-status">
+                        No controller detected
+                    </div>
+                    <div id="auto-pattern-indicator" class="auto-pattern-status">
+                        <span class="status-dot inactive"></span>Manual Pattern Control
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="sketch_minimal.js"></script>
+</body>
+</html>
